@@ -40,10 +40,15 @@ public final class Main extends MIDlet {
         private volatile boolean running;
         private Thread thread;
 
+        // FPS
         private int fps;
         private int frames;
-
         private long fpsTime;
+
+        // Memory
+        private long memoryUsed;
+        private long memoryFree;
+        private long memoryTotal;
 
         GameCanvas() {
             setFullScreenMode(true);
@@ -55,7 +60,9 @@ public final class Main extends MIDlet {
             }
 
             running = true;
+
             fpsTime = System.currentTimeMillis();
+
             thread = new Thread(this);
             thread.start();
         }
@@ -69,29 +76,55 @@ public final class Main extends MIDlet {
             int width = getWidth();
             int height = getHeight();
 
+            // Background
             g.setColor(0x000000);
             g.fillRect(0, 0, width, height);
 
+            // Debug text
             g.setColor(0xFFFFFF);
 
+            int y = 2;
+
             g.drawString(
-                "MMXF",
+                "MMXF DEBUG",
                 2,
-                2,
+                y,
                 Graphics.TOP | Graphics.LEFT
             );
+
+            y += 18;
 
             g.drawString(
                 "FPS: " + fps,
                 2,
-                20,
+                y,
                 Graphics.TOP | Graphics.LEFT
             );
 
+            y += 18;
+
             g.drawString(
-                "Java ME / CLDC 1.1 / MIDP 2.0",
+                "Mem Used: " + formatMemory(memoryUsed),
                 2,
-                38,
+                y,
+                Graphics.TOP | Graphics.LEFT
+            );
+
+            y += 18;
+
+            g.drawString(
+                "Mem Free: " + formatMemory(memoryFree),
+                2,
+                y,
+                Graphics.TOP | Graphics.LEFT
+            );
+
+            y += 18;
+
+            g.drawString(
+                "Mem Total: " + formatMemory(memoryTotal),
+                2,
+                y,
                 Graphics.TOP | Graphics.LEFT
             );
         }
@@ -114,7 +147,7 @@ public final class Main extends MIDlet {
                     try {
                         Thread.sleep(sleep);
                     } catch (InterruptedException e) {
-                        // The loop checks running on the next iteration.
+                        // Loop checks running on next iteration.
                     }
                 }
             }
@@ -125,11 +158,39 @@ public final class Main extends MIDlet {
 
             long now = System.currentTimeMillis();
 
+            // FPS
             if (now - fpsTime >= 1000L) {
                 fps = frames;
                 frames = 0;
                 fpsTime = now;
             }
+
+            // Memory
+            Runtime runtime = Runtime.getRuntime();
+
+            memoryTotal = runtime.totalMemory();
+            memoryFree = runtime.freeMemory();
+            memoryUsed = memoryTotal - memoryFree;
+        }
+
+        /**
+         * Converts bytes to a more readable unit.
+         *
+         * Examples:
+         * 512     -> 512 B
+         * 2048    -> 2 KB
+         * 1048576 -> 1 MB
+         */
+        private String formatMemory(long bytes) {
+            if (bytes >= 1024L * 1024L) {
+                return (bytes / (1024L * 1024L)) + " MB";
+            }
+
+            if (bytes >= 1024L) {
+                return (bytes / 1024L) + " KB";
+            }
+
+            return bytes + " B";
         }
     }
 }

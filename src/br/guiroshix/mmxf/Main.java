@@ -45,10 +45,10 @@ public final class Main extends MIDlet {
         private int frames;
         private long fpsTime;
 
-        // Memory
-        private long memoryUsed;
-        private long memoryFree;
-        private long memoryTotal;
+        // Java heap
+        private long heapUsed;
+        private long heapFree;
+        private long heapTotal;
 
         GameCanvas() {
             setFullScreenMode(true);
@@ -104,7 +104,7 @@ public final class Main extends MIDlet {
             y += 18;
 
             g.drawString(
-                "Mem Used: " + formatMemory(memoryUsed),
+                "Heap Used: " + formatMemory(heapUsed),
                 2,
                 y,
                 Graphics.TOP | Graphics.LEFT
@@ -113,7 +113,7 @@ public final class Main extends MIDlet {
             y += 18;
 
             g.drawString(
-                "Mem Free: " + formatMemory(memoryFree),
+                "Heap Free: " + formatMemory(heapFree),
                 2,
                 y,
                 Graphics.TOP | Graphics.LEFT
@@ -122,7 +122,7 @@ public final class Main extends MIDlet {
             y += 18;
 
             g.drawString(
-                "Mem Total: " + formatMemory(memoryTotal),
+                "Heap Total: " + formatMemory(heapTotal),
                 2,
                 y,
                 Graphics.TOP | Graphics.LEFT
@@ -147,7 +147,7 @@ public final class Main extends MIDlet {
                     try {
                         Thread.sleep(sleep);
                     } catch (InterruptedException e) {
-                        // Loop checks running on next iteration.
+                        // Loop checks running on the next iteration.
                     }
                 }
             }
@@ -165,21 +165,21 @@ public final class Main extends MIDlet {
                 fpsTime = now;
             }
 
-            // Memory
+            // Java heap
             Runtime runtime = Runtime.getRuntime();
 
-            memoryTotal = runtime.totalMemory();
-            memoryFree = runtime.freeMemory();
-            memoryUsed = memoryTotal - memoryFree;
+            heapTotal = runtime.totalMemory();
+            heapFree = runtime.freeMemory();
+            heapUsed = heapTotal - heapFree;
         }
 
         /**
-         * Converts bytes to a more readable unit.
+         * Converts bytes to a readable memory unit.
          *
          * Examples:
-         * 512     -> 512 B
-         * 2048    -> 2 KB
-         * 1048576 -> 1 MB
+         * 512 B
+         * 2048 B -> 2 KB
+         * 1048576 B -> 1 MB
          */
         private String formatMemory(long bytes) {
             if (bytes >= 1024L * 1024L) {

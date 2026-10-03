@@ -1,0 +1,99 @@
+name: Build MMXF
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # JDK 8 is intentional:
+      # javac 8 still accepts the old -source/-target values used by
+      # traditional CLDC builds.
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Download Java ME toolchain
+        run: |
+          chmod +x tools/setup.sh
+          ./tools/setup.sh
+
+      - name: Compile CLDC/MIDP classes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf build
+          mkdir -p build/classes
+
+          find src -name '*.java' > build/sources.txt
+
+          javac \
+            -source 1.3 \
+            -target 1.1 \
+            -encoding UTF-8 \
+            -bootclasspath "lib/cldcapi11.jar:lib/midpapi20.jar" \
+            -classpath "lib/cldcapi11.jar:lib/midpapi20.jar" \
+            -d build/classes \
+            @build/sources.txt
+
+      - name: Preverify with ProGuard
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PROGUARD="tools/toolchain/proguard-7.8.2/bin/proguard.sh"
+
+          mkdir -p build
+          "$PROGUARD" @tools/proguard.pro
+
+      - name: Package MIDlet JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf build/jar
+          mkdir -p build/jar/META-INF
+
+          cp resources/META-INF/MANIFEST.MF build/jar/META-INF/MANIFEST.MF
+          cp build/preverified.jar build/preverified-with-manifest.jar
+
+          # Extract the preverified classes and package them with our manifest.
+          cd build/jar
+          jar xf ../preverified-with-manifest.jar
+          jar cfm ../MMXF.jar META-INF/MANIFEST.MF .
+
+      - name: Generate JAD
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SIZE="$(stat -c '%s' build/MMXF.jar)"
+
+          sed "s/@JAR_SIZE@/${SIZE}/" MMXF.jad > build/MMXF.jad
+
+          echo "MMXF.jar size: ${SIZE} bytes"
+
+      - name: Show artifact
+        run: |
+          ls -lh build/MMXF.jar build/MMXF.jad
+          echo
+          unzip -l build/MMXF.jar
+
+      - name: Upload JAR and JAD
+        uses: actions/upload-artifact@v4
+        with:
+          name: MMXF-${{ github.sha }}
+          path: |
+            build/MMXF.jar
+            build/MMXF.jad
+          if-no-files-found: error

@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+MIDlet-Name: MMXF
+MIDlet-Version: 0.1.0
+MIDlet-Vendor: Guiroshix
+MIDlet-1: MMXF,,br.guiroshix.mmxf.Main
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0

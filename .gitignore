@@ -1,0 +1,22 @@
+# Build output
+build/
+dist/
+out/
+
+# Downloaded Java ME toolchain
+tools/toolchain/
+
+# Downloaded API stubs
+lib/*.jar
+
+# IDE / editor files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
